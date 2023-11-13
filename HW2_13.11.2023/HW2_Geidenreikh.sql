@@ -16,7 +16,7 @@ https://github.com/Microsoft/sql-server-samples/releases/download/wide-world-imp
 -- Задание - написать выборки для получения указанных ниже данных.
 -- ---------------------------------------------------------------------------
 
-USE WideWorldImport
+USE WideWorldImporters
 
 /*
 1. Все товары, в названии которых есть "urgent" или название начинается с "Animal".
@@ -26,7 +26,7 @@ USE WideWorldImport
 
 SELECT StockItemID,StockItemName 
 FROM Warehouse.StockItems
-WHERE StockItemName LIKE '%urgent%' OR StockItemName like '%animal%'
+WHERE StockItemName LIKE '%urgent%' OR StockItemName like 'animal%'
 
 /*
 2. Поставщиков (Suppliers), у которых не было сделано ни одного заказа (PurchaseOrders).
@@ -62,7 +62,7 @@ where b.PurchaseOrderID is null
 
 
 select a.OrderID
-, b.OrderDate
+, convert(varchar, b.OrderDate, 104) as OrderDate2
 , datename(month, b.orderdate) as MONTH_NAME
 , concat('Q', datepart(quarter, b.orderdate)) as QUARTER_NAME
 , ceiling(cast(month(b.orderdate) as numeric(10,4))/4) as THIRD_OF_THE_YEAR
@@ -71,11 +71,11 @@ from sales.OrderLines a
 left join Sales.Orders b on a.OrderID=b.OrderID
 left join Sales.Customers c on b.CustomerID=c.CustomerID
 where a.PickingCompletedWhen is not null
+and (a.UnitPrice > 100 or quantity > 20)
 order by  QUARTER_NAME
 , THIRD_OF_THE_YEAR
 , b.OrderDate
 offset 1000 rows fetch next 100 rows only
-
 
 /*
 4. Заказы поставщикам (Purchasing.Suppliers),
