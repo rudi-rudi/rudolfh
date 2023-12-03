@@ -42,9 +42,10 @@ where IsSalesperson = 1) sp
 left join (select SalespersonPersonID
 , InvoiceDate
 from sales.invoices
+where InvoiceDate = '2015-07-04'
 group by SalespersonPersonID
 , InvoiceDate
-having InvoiceDate = '2015-07-04'
+--having InvoiceDate = '2015-07-04'
 ) sd on sp.PersonID=sd.SalespersonPersonID
 where sd.SalespersonPersonID is null
 
@@ -54,8 +55,8 @@ where sd.SalespersonPersonID is null
 ; with 
 sp (pID, Name) as (select PersonID, FullName from application.people where IsSalesperson = 1)
 , sd (pID, Invoice) as (select SalespersonPersonID, InvoiceDate from sales.invoices
-group by SalespersonPersonID, InvoiceDate
-having InvoiceDate = '2015-07-04')
+where InvoiceDate = '2015-07-04'
+group by SalespersonPersonID, InvoiceDate)
 select sp.pID
 , sp.Name
 from sp
@@ -139,48 +140,38 @@ TODO: напишите здесь свое решение
 
 SET STATISTICS IO, TIME ON
 
-select top 3 c.CityID
-, c.CityName
-, g.FullName as PackedBy
---, g.TransactionAmount
-from 
-(
-select a.CustomerID
-, b.CityID
-, b.CityName
-from Sales.Customers a
-left join application.cities b on a.DeliveryCityID=b.CityID
-) c
-right join
-(
-select d.CustomerID
-, d.InvoiceID
-, d.TransactionAmount
-, e.PackedByPersonID
-, f.FullName
-from Sales.CustomerTransactions d
-left join Sales.Invoices e on d.InvoiceID=e.InvoiceID
-left join Application.People f on e.PackedByPersonID=f.PersonID
-) g
-on g.CustomerID=c.CustomerID
-order by g.TransactionAmount desc
+
+select distinct d.DeliveryCityID
+, ac.CityName
+, p.Fullname
+--, a.UnitPrice
+from
+(select distinct top 3 with ties StockItemID, UnitPrice
+from Sales.OrderLines
+order by UnitPrice desc) as a
+inner join Sales.OrderLines b on a.StockItemID=b.StockItemID
+inner join Sales.Invoices c on c.OrderID=b.OrderID
+inner join Sales.Customers d on d.CustomerID=c.CustomerID
+inner join application.cities ac on ac.CityID=d.DeliveryCityID
+inner join application.people p on c.PackedbyPersonID=p.PersonID
 
 -- with
 
-SET STATISTICS IO, TIME ON
-
-; with
-cit as (select a.CustomerID, b.CityID, b.CityName
-from Sales.Customers a
-left join application.cities b on a.DeliveryCityID=b.CityID)
-, ct as (select d.CustomerID, d.InvoiceID, d.TransactionAmount, e.PackedByPersonID, f.FullName
-from Sales.CustomerTransactions d
-left join Sales.Invoices e on d.InvoiceID=e.InvoiceID
-left join Application.People f on e.PackedByPersonID=f.PersonID)
-select top 3 cit.CityID, cit.CityName, ct.FullName as PackedBy --, g.TransactionAmount
-from cit 
-right join ct on cit.CustomerID=ct.CustomerID
-order by ct.TransactionAmount desc
+with a as (
+select distinct top 3 with ties StockItemID, UnitPrice
+from Sales.OrderLines
+order by UnitPrice desc)
+select distinct d.DeliveryCityID
+, ac.CityName
+, p.Fullname
+--, a.StockItemID 
+--, a.UnitPrice
+from a
+inner join Sales.OrderLines b on a.StockItemID=b.StockItemID
+inner join Sales.Invoices c on c.OrderID=b.OrderID
+inner join Sales.Customers d on d.CustomerID=c.CustomerID
+inner join application.cities ac on ac.CityID=d.DeliveryCityID
+inner join application.people p on c.PackedbyPersonID=p.PersonID
 
 
 -- ---------------------------------------------------------------------------
