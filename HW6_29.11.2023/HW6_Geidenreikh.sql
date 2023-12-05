@@ -52,8 +52,8 @@ group by i.invoiceid
 select inv.*
 , (select sum(extendedprice)
 from inv inv2
-where inv.invoicedate=inv2.invoicedate
-and inv.invoiceid>=inv2.invoiceid
+where eomonth(inv.invoicedate)>=eomonth(inv2.invoicedate)
+--and inv.invoiceid>=inv2.invoiceid
 ) as cumulative_price
 from inv
 order by inv.invoiceid
@@ -76,10 +76,10 @@ group by i.invoiceid
 , c.customername
 , i.invoicedate)
 select inv.*
-, sum(inv.extendedprice) over(partition by inv.invoicedate order by inv.invoiceid) as cumulative_price
+, sum(inv.extendedprice) over(order by eomonth(inv.invoicedate)) as cumulative_price
 from inv
 order by inv.invoiceid
-
+, eomonth(inv.invoicedate)
 
 
 /*
