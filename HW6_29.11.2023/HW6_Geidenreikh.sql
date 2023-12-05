@@ -38,30 +38,25 @@ USE WideWorldImporters
 Нарастающий итог должен быть без оконной функции.
 */
 
-напишите здесь свое решение
-
-; with il as 
-(select a.*
-, b.CustomerID
-, b.InvoiceDate
-from Sales.InvoiceLines a 
-left join Sales.Invoices b on a.InvoiceID=b.InvoiceID)
-select il.InvoiceID
-, b.CustomerName
-, il.InvoiceDate
-, il.ExtendedPrice
-, (select sum(ExtendedPrice)
-from Sales.InvoiceLines il2
-where il.InvoiceID=il2.InvoiceID
-and il2.InvoiceLineID>=il.InvoiceLineID
-) as Cumulative_summary
-from il
-left join Sales.Customers b on il.CustomerID=b.CustomerID
-where il.InvoiceDate >= '2015-01-01'
-order by 1, (select count(InvoiceLineID)
-from Sales.InvoiceLines il2 
-where il.InvoiceID=il2.InvoiceID
-and il.InvoiceLineID<=il2.InvoiceLineID)
+; with inv as (select i.invoiceid
+, c.customername
+, i.invoicedate
+, sum(il.extendedprice) as extendedprice
+from sales.invoicelines il
+left join sales.invoices i on il.invoiceid=i.invoiceid
+left join sales.customers c on c.customerid=i.customerid
+where i.invoicedate >= '2015-01-01'
+group by i.invoiceid
+, c.customername
+, i.invoicedate)
+select inv.*
+, (select sum(extendedprice)
+from inv inv2
+where inv.invoicedate=inv2.invoicedate
+and inv.invoiceid>=inv2.invoiceid
+) as cumulative_price
+from inv
+order by inv.invoiceid
 
 
 /*
@@ -69,34 +64,28 @@ and il.InvoiceLineID<=il2.InvoiceLineID)
    Сравните производительность запросов 1 и 2 с помощью set statistics time, io on
 */
 
-напишите здесь свое решение
+; with inv as (select i.invoiceid
+, c.customername
+, i.invoicedate
+, sum(il.extendedprice) as extendedprice
+from sales.invoicelines il
+left join sales.invoices i on il.invoiceid=i.invoiceid
+left join sales.customers c on c.customerid=i.customerid
+where i.invoicedate >= '2015-01-01'
+group by i.invoiceid
+, c.customername
+, i.invoicedate)
+select inv.*
+, sum(inv.extendedprice) over(partition by inv.invoicedate order by inv.invoiceid) as cumulative_price
+from inv
+order by inv.invoiceid
 
-; with il as 
-(select a.*
-, b.CustomerID
-, b.InvoiceDate
-from Sales.InvoiceLines a 
-left join Sales.Invoices b on a.InvoiceID=b.InvoiceID)
-select il.InvoiceID
-, b.CustomerName
-, il.InvoiceDate
-, il.ExtendedPrice
-, sum(ExtendedPrice) over(partition by il.InvoiceID order by il.InvoiceLineID desc rows between unbounded preceding and current row) as Cumulative_summary
-from il
-left join Sales.Customers b on il.CustomerID=b.CustomerID
-where il.InvoiceDate >= '2015-01-01'
-order by 1, (select count(InvoiceLineID)
-from Sales.InvoiceLines il2 
-where il.InvoiceID=il2.InvoiceID
-and il.InvoiceLineID<=il2.InvoiceLineID)
 
 
 /*
 3. Вывести список 2х самых популярных продуктов (по количеству проданных) 
 в каждом месяце за 2016 год (по 2 самых популярных продукта в каждом месяце).
 */
-
-напишите здесь свое решение
 
 ; with q1 as (select il.StockItemID
 , il.Description
@@ -139,8 +128,6 @@ where rank_quantity < 3
 Для этой задачи НЕ нужно писать аналог без аналитических функций.
 */
 
-напишите здесь свое решение
-
 select StockItemID
 , StockItemName
 , left(StockItemName, 1) as First_letter
@@ -151,7 +138,7 @@ select StockItemID
 , count(StockItemID) over(partition by left(StockItemName, 1)) as quantity_by_goods
 , lead(StockItemID, 1) RESPECT NULLS over(order by StockItemName) as next_good
 , lag(StockItemID, 1) RESPECT NULLS over(order by StockItemName) as last_good
-, isnull(lag(StockItemName, 2) over(order by StockItemName), 'No items') as second_last_good
+, isnull(lag(StockItemName, 2, 'No items') over(order by StockItemName), 'No items') as second_last_good
 , ntile(30) over( order by TypicalWeightPerUnit) as good_groups
 --, TypicalWeightPerUnit
 from Warehouse.StockItems
@@ -162,8 +149,6 @@ order by StockItemName
 5. По каждому сотруднику выведите последнего клиента, которому сотрудник что-то продал.
    В результатах должны быть ид и фамилия сотрудника, ид и название клиента, дата продажи, сумму сделки.
 */
-
-напишите здесь свое решение
 
 ; with last_sales as (select distinct
 SalespersonPersonID
@@ -181,8 +166,6 @@ join last_sales ls on ls.SalespersonPersonID=p.PersonID
 В результатах должно быть ид клиета, его название, ид товара, цена, дата покупки.
 */
 
-напишите здесь свое решение
-
 ; with rank as (select distinct c.CustomerID
 , c.CustomerName
 , il.StockItemID
@@ -197,4 +180,4 @@ from rank
 where rank_UnitPrice < 3
 order by CustomerID, rank_UnitPrice
 
-Опционально можете для каждого запроса без оконных функций сделать вариант запросов с оконными функциями и сравнить их производительность. 
+/**Опционально можете для каждого запроса без оконных функций сделать вариант запросов с оконными функциями и сравнить их производительность. **/
