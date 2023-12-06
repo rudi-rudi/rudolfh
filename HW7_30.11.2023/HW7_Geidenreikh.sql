@@ -151,12 +151,16 @@ select c.CustomerID
 , top2.Description
 , top2.StockItemID
 , top2.UnitPrice
-, top2.InvoiceDate
+, (select max(InvoiceDate) from Sales.Invoices i2
+inner join Sales.InvoiceLines il2 on i2.InvoiceID=il2.InvoiceID
+where il2.StockItemID=top2.StockItemID
+and c.CustomerID=i2.CustomerID)
 from Sales.Customers c
 cross apply (
-select distinct top 2 i.CustomerID, il.Description, il.StockItemID, il.UnitPrice, i.InvoiceDate
+select distinct top 2 i.CustomerID, il.Description, il.StockItemID, il.UnitPrice
 from Sales.Invoices i
 right join Sales.InvoiceLines il on i.InvoiceID=il.InvoiceID
 where c.CustomerID=i.CustomerID
 order by il.UnitPrice desc) as top2
+--where c.CustomerID = 832
 order by c.CustomerID
