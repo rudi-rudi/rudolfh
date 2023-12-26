@@ -59,5 +59,41 @@ where customerid = 2
 
 ---5. bcp out + bulk insert
 
-CREATE Folder BCP
-bcp [wideworldimporters].[sales].[customers] out [C:\Users\rudol\OneDrive\Рабочий стол\MS SQL SERVER DEVELOPER\1\rudolfh\HW9_07.12.2023] -c -T
+---создаем папку для bcp
+
+CREATE folder BCP
+
+--в командную строку необходимо ввести данную программу, чтобы экспортировать в файл данные из таблицы, предварительно установив odbc sql server driver 17
+
+bcp wideworldimporters.sales.customers out C:\Users\rudol\bcp\bcp_customers.txt -c -T -S DESKTOP-TV5C843\RH_MSSQLSERVER
+
+--загружаем тестовую таблицу для bulk insert
+
+use WideWorldImporters
+
+select *
+into sales.customers_bulk_insert
+from Sales.Customers
+
+--чистим от данных таблицу
+
+truncate table sales.customers_bulk_insert
+
+--проводим bulk insert
+
+BULK INSERT [sales].[customers_bulk_insert]
+    FROM "C:\Users\rudol\bcp\bcp_customers.txt"
+	WITH 
+		(
+		BATCHSIZE = 1000,
+		DATAFILETYPE = 'char',
+		FIELDTERMINATOR = '\t',
+		ROWTERMINATOR ='\n',
+		KEEPNULLS,
+		TABLOCK
+		);
+
+--проверяем результат отработки bulk insert
+
+select *
+from Sales.customers_bulk_insert
