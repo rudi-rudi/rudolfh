@@ -1,5 +1,5 @@
-
----1. добавить записи в таблицу
+п»ї
+---1. РґРѕР±Р°РІРёС‚СЊ Р·Р°РїРёСЃРё РІ С‚Р°Р±Р»РёС†Сѓ
 
 insert into Sales.Customers 
 (CustomerName, CreditLimit, AccountOpenedDate, StandardDiscountPercentage, IsStatementSent, IsOnCreditHold, PaymentDays, PhoneNumber, FaxNumber, WebsiteURL, DeliveryAddressLine1, DeliveryPostalCode, PostalAddressLine1, PostalPostalCode, BillToCustomerID, CustomerCategoryID, PrimaryContactPersonID, DeliveryMethodID, DeliveryCityID, PostalCityID, LastEditedBy)
@@ -10,12 +10,12 @@ values
 ,  ('test4', 1000, '2023-12-10', 0, 0, 0, 7, '(210) 545-0511', '(210) 545-0512', 'http://www.test4.com', 'Shop Test4', '99999', 'PO Box 9999', '99999', 1, 2, 2, 3, 3673, 3673, 1)
 ,  ('test5', 1000, '2023-12-10', 0, 0, 0, 7, '(210) 545-0512', '(210) 545-0513', 'http://www.test5.com', 'Shop Test5', '99999', 'PO Box 9999', '99999', 1, 2, 2, 3, 3673, 3673, 1)
 
----2. удалить одну запись
+---2. СѓРґР°Р»РёС‚СЊ РѕРґРЅСѓ Р·Р°РїРёСЃСЊ
 
 delete from Sales.Customers
 where CustomerName = 'test5'
 
----3. изменить одну запись
+---3. РёР·РјРµРЅРёС‚СЊ РѕРґРЅСѓ Р·Р°РїРёСЃСЊ
 
 update Sales.Customers
 set 
@@ -28,7 +28,7 @@ inserted.CustomerName as new_name
 , deleted.AccountOpenedDate as old_openeddate
 where CustomerName = 'test4'
 
----4. merge сделать
+---4. merge СЃРґРµР»Р°С‚СЊ
 
 select *
 into Sales.Customers_copy
@@ -59,15 +59,15 @@ where customerid = 2
 
 ---5. bcp out + bulk insert
 
----создаем папку для bcp
+---СЃРѕР·РґР°РµРј РїР°РїРєСѓ РґР»СЏ bcp
 
 CREATE folder BCP
 
---в командную строку необходимо ввести данную программу, чтобы экспортировать в файл данные из таблицы, предварительно установив odbc sql server driver 17
+--РІ РєРѕРјР°РЅРґРЅСѓСЋ СЃС‚СЂРѕРєСѓ РЅРµРѕР±С…РѕРґРёРјРѕ РІРІРµСЃС‚Рё РґР°РЅРЅСѓСЋ РїСЂРѕРіСЂР°РјРјСѓ, С‡С‚РѕР±С‹ СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ РІ С„Р°Р№Р» РґР°РЅРЅС‹Рµ РёР· С‚Р°Р±Р»РёС†С‹, РїСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕ СѓСЃС‚Р°РЅРѕРІРёРІ odbc sql server driver 17
 
 bcp wideworldimporters.sales.customers out C:\Users\rudol\bcp\bcp_customers.txt -c -T -S DESKTOP-TV5C843\RH_MSSQLSERVER
 
---загружаем тестовую таблицу для bulk insert
+--Р·Р°РіСЂСѓР¶Р°РµРј С‚РµСЃС‚РѕРІСѓСЋ С‚Р°Р±Р»РёС†Сѓ РґР»СЏ bulk insert
 
 use WideWorldImporters
 
@@ -75,11 +75,11 @@ select *
 into sales.customers_bulk_insert
 from Sales.Customers
 
---чистим от данных таблицу
+--С‡РёСЃС‚РёРј РѕС‚ РґР°РЅРЅС‹С… С‚Р°Р±Р»РёС†Сѓ
 
 truncate table sales.customers_bulk_insert
 
---проводим bulk insert
+--РїСЂРѕРІРѕРґРёРј bulk insert
 
 BULK INSERT [sales].[customers_bulk_insert]
     FROM "C:\Users\rudol\bcp\bcp_customers.txt"
@@ -93,7 +93,7 @@ BULK INSERT [sales].[customers_bulk_insert]
 		TABLOCK
 		);
 
---проверяем результат отработки bulk insert
+--РїСЂРѕРІРµСЂСЏРµРј СЂРµР·СѓР»СЊС‚Р°С‚ РѕС‚СЂР°Р±РѕС‚РєРё bulk insert
 
 select *
 from Sales.customers_bulk_insert
