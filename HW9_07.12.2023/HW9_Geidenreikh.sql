@@ -1,4 +1,4 @@
-﻿
+
 ---1. добавить записи в таблицу
 
 insert into Sales.Customers 
