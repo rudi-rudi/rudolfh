@@ -57,8 +57,8 @@ OPEN numeric(20,5)
 LOW numeric(20,5)
 HIGH numeric(20,5)
 CLOSE numeric(20,5)
-OPENPOSITIONVALUE numeric(50,5)
-VALUE numeric(50,5)
+OPENPOSITIONVALUE numeric(38,5)
+VALUE numeric(38,5)
 VOLUME int
 OPENPOSITION int
 SETTLEPRICE numeric(20,5)
@@ -77,8 +77,8 @@ LEGALCLOSEPRICE numeric(20,5)
 WAPRICE numeric(20,5)
 CLOSE numeric(20,5)
 VOLUME int
-MP2VALTRD numeric(50,5)
-MARKETPRICE3TRADESVALUE numeric(50,5)
+MP2VALTRD numeric(38,5)
+MARKETPRICE3TRADESVALUE numeric(38,5)
 CURRENCYID nvarchar(9)
 
 BondsMarketdata
@@ -87,7 +87,7 @@ ID bigint pk
 SECID nvarchar(36)  fk >- SecuritiesList.SECID
 TRADEDATE date
 NUMTRADES int
-VALUE numeric(50,5)
+VALUE numeric(38,5)
 LOW numeric(20,5)
 HIGH numeric(20,5)
 CLOSE numeric(20,5)
@@ -98,7 +98,7 @@ OPEN numeric(20,5)
 VOLUME int
 MARKETPRICE2 numeric(20,5)
 MARKETPRICE3 numeric(20,5)
-MP2VALTRD numeric(50,5)
+MP2VALTRD numeric(38,5)
 MARKETPRICE3TRADESVALUE numeric(50,5)
 MATDATE date
 COUPONPERCENT decimal(5,2)
