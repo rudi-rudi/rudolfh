@@ -77,8 +77,6 @@ create table warehouse.stockitems_upload (
 , [ValidTo] datetime2(7)
 )
 
-select * from Warehouse.stockitems_upload
-
 ---- Открываем XML StockItems.xml
 
 declare @xmldoc as xml;
@@ -152,35 +150,83 @@ with ( [StockItemID] int
 
 exec sp_xml_removedocument @dochandle ---Почему не обнуляется dochandle?
 
+drop table if exists warehouse.stockitems_upload0
 select *
-from warehouse.stockitems_upload
+into warehouse.stockitems_upload0
+from warehouse.stockitems
+
+create clustered index stockitems0 on warehouse.stockitems_upload0 (StockItemID)
+
+MERGE warehouse.stockitems_upload0 AS Target
+USING warehouse.stockitems_upload AS Source
+    ON (Target.StockItemID = Source.StockItemID)
+WHEN NOT MATCHED 
+    THEN INSERT 
+        VALUES (Source.StockItemID
+		, Source.StockItemName
+		, Source.SupplierID
+		, Source.ColorID
+		, Source.UnitPackageID
+		, Source.OuterPackageID
+		, Source.Brand
+		, Source.Size
+		, Source.LeadTimeDays
+		, Source.QuantityPerOuter
+		, Source.IsChillerStock
+		, Source.Barcode
+		, Source.TaxRate
+		, Source.UnitPrice
+		, Source.RecommendedRetailPrice
+		, Source.TypicalWeightPerUnit
+		, Source.MarketingComments
+		, Source.InternalComments
+		, Source.Photo
+		, Source.CustomFields
+		, Source.Tags
+		, Source.SearchDetails
+		, Source.LastEditedBy
+		, Source.ValidFrom
+		, Source.ValidTo)
+OUTPUT deleted.*, $action, inserted.*;
 
 
-insert into warehouse.stockitems --- почему не работает??? Все колонки правильные
-select [StockItemName] 
-, [SupplierID] 
-, [ColorID] 
-, [UnitPackageID] 
-, [OuterPackageID] 
-, [Brand] 
-, [Size] 
-, [LeadTimeDays] 
-, [QuantityPerOuter] 
-, [IsChillerStock] 
-, [Barcode] 
-, [TaxRate] 
-, [UnitPrice] 
-, [RecommendedRetailPrice] 
-, [TypicalWeightPerUnit] 
-, [MarketingComments] 
-, [InternalComments] 
-, [Photo] 
-, [CustomFields] 
-, [Tags]
-, [SearchDetails] 
-, [ValidFrom] 
-, [ValidTo] 
-from warehouse.stockitems_upload
+select * from warehouse.stockitems_upload
+select * from warehouse.stockitems_upload0
+
+---Если попытаться вставить данные в оригинальную таблицу warehouse.stockitems, то выдает ошибку
+
+MERGE warehouse.stockitems AS Target
+USING warehouse.stockitems_upload AS Source
+    ON (Target.StockItemID = Source.StockItemID)
+WHEN NOT MATCHED 
+    THEN INSERT 
+        VALUES (Source.StockItemID
+		, Source.StockItemName
+		, Source.SupplierID
+		, Source.ColorID
+		, Source.UnitPackageID
+		, Source.OuterPackageID
+		, Source.Brand
+		, Source.Size
+		, Source.LeadTimeDays
+		, Source.QuantityPerOuter
+		, Source.IsChillerStock
+		, Source.Barcode
+		, Source.TaxRate
+		, Source.UnitPrice
+		, Source.RecommendedRetailPrice
+		, Source.TypicalWeightPerUnit
+		, Source.MarketingComments
+		, Source.InternalComments
+		, Source.Photo
+		, Source.CustomFields
+		, Source.Tags
+		, Source.SearchDetails
+		, Source.LastEditedBy
+		, Source.ValidFrom
+		, Source.ValidTo)
+OUTPUT deleted.*, $action, inserted.*;
+
 
 ---xQuery
 
