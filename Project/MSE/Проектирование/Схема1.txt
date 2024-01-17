@@ -1,9 +1,9 @@
 SecuritiesList
 -
 SECID nvarchar(36) pk
+BOARDID nvarchar(12) fk >- BoardsList.BOARDID
 SHORTNAME nvarchar(75)
 SECNAME nvarchar(225)
-BOARDID nvarchar(12)
 DECIMALS int
 MINSTEP numeric(10,5)
 LASTTRADEDATE date
@@ -25,14 +25,19 @@ MARKETCODE nvarchar(12)
 FACEUNIT nvarchar(12)
 CURRENCYID nvarchar(12)
 LOTDIVIDER int
-BOARDNAME nvarchar(381)
 INSTRID nvarchar(12)
-ISSUESIZE int
+ISSUESIZE bigint
 ISIN nvarchar(36)
 REGNUMBER nvarchar(90)
 COUPONPERIOD int
-ISSUESIZEPLACED int
+ISSUESIZEPLACED bigint
 LOTVALUE numeric(15,5)
+
+BoardsList
+-
+BOARDID nvarchar(12)
+BOARDNAME nvarchar(381)
+
 
 CurrencyMarketdata
 -
