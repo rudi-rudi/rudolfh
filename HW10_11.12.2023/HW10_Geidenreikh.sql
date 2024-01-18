@@ -98,7 +98,7 @@ select @dochandle as dochandle
 insert into Warehouse.stockitems_upload
 select [StockItemName] 
 , [SupplierID] 
-, [ColorID] 
+, 3 as [ColorID] 
 , [UnitPackageID] 
 , [OuterPackageID] 
 , [Brand] 
@@ -117,7 +117,7 @@ select [StockItemName]
 , [CustomFields] 
 , [Tags]
 , [SearchDetails] 
-, (select MIN(PersonID) from Application.People) as [LastEditedBy] 
+, 2 as [LastEditedBy] 
 , getdate() as [ValidFrom] 
 , (select max(ValidTo) from Warehouse.stockitems) as [ValidTo] 
 from openxml(@dochandle, N'StockItems/Item/Package')
@@ -143,7 +143,7 @@ with ( [StockItemID] int
 , [CustomFields] nvarchar(max)
 , [Tags] nvarchar(max)
 , [SearchDetails] nvarchar(max) '../@Name'
-, [LastEditedBy] int
+, [LastEditedBy] int 
 , [ValidFrom] datetime2(7)
 , [ValidTo] datetime2(7) 
 )
@@ -187,6 +187,9 @@ WHEN NOT MATCHED
 		, Source.LastEditedBy
 		, Source.ValidFrom
 		, Source.ValidTo)
+WHEN MATCHED
+THEN UPDATE
+SET StockItemName=Target.StockItemName
 OUTPUT deleted.*, $action, inserted.*;
 
 
@@ -195,12 +198,19 @@ select * from warehouse.stockitems_upload0
 
 ---Если попытаться вставить данные в оригинальную таблицу warehouse.stockitems, то выдает ошибку
 
+select *
+from sys.sequences
+
+declare @StockItemID int
+
+set @StockItemID = next value for sequences.StockItemID
+
 MERGE warehouse.stockitems AS Target
 USING warehouse.stockitems_upload AS Source
     ON (Target.StockItemID = Source.StockItemID)
 WHEN NOT MATCHED 
     THEN INSERT 
-        VALUES (Source.StockItemID
+        VALUES (@StockItemID
 		, Source.StockItemName
 		, Source.SupplierID
 		, Source.ColorID
@@ -222,11 +232,11 @@ WHEN NOT MATCHED
 		, Source.CustomFields
 		, Source.Tags
 		, Source.SearchDetails
-		, Source.LastEditedBy
-		, Source.ValidFrom
-		, Source.ValidTo)
-OUTPUT deleted.*, $action, inserted.*;
-
+		, Source.LastEditedBy)
+WHEN MATCHED
+THEN UPDATE
+SET StockItemName=Target.StockItemName;
+--OUTPUT deleted.*, $action, inserted.*;
 
 ---xQuery
 
