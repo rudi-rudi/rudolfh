@@ -45,39 +45,9 @@ USE WideWorldImporters;
 
 ---XML
 
---- Создаем таблицу для загрузки в warehouse.StockItems
-
-drop table if exists warehouse.stockitems_upload
-
-create table warehouse.stockitems_upload (
-[StockItemID] int primary key identity(228, 1) --- как здесь автоматически вставлять последнее значение+1 (227) из таблицы warehouse.stockitems?
-, [StockItemName] nvarchar(100)
-, [SupplierID] int
-, [ColorID] int
-, [UnitPackageID] int
-, [OuterPackageID] int
-, [Brand] nvarchar(50)
-, [Size] nvarchar(20)
-, [LeadTimeDays] int
-, [QuantityPerOuter] int
-, [IsChillerStock] bit
-, [Barcode] nvarchar(50)
-, [TaxRate] decimal(18,3)
-, [UnitPrice] decimal(18,2)
-, [RecommendedRetailPrice] decimal(18,2)
-, [TypicalWeightPerUnit] decimal(18,3)
-, [MarketingComments] nvarchar(max)
-, [InternalComments] nvarchar(max)
-, [Photo] varbinary(max)
-, [CustomFields] nvarchar(max)
-, [Tags] nvarchar(max)
-, [SearchDetails] nvarchar(max)
-, [LastEditedBy] int foreign key references Application.people(PersonID)
-, [ValidFrom] datetime2(7)
-, [ValidTo] datetime2(7)
-)
-
 ---- Открываем XML StockItems.xml
+
+drop table if exists #t1
 
 declare @xmldoc as xml;
 
@@ -95,148 +65,68 @@ exec sp_xml_preparedocument @dochandle output, @xmldoc;
 
 select @dochandle as dochandle
 
-insert into Warehouse.stockitems_upload
-select [StockItemName] 
-, [SupplierID] 
-, 3 as [ColorID] 
-, [UnitPackageID] 
-, [OuterPackageID] 
-, [Brand] 
-, [Size] 
-, [LeadTimeDays] 
-, [QuantityPerOuter] 
-, [IsChillerStock] 
-, [Barcode] 
-, [TaxRate] 
-, [UnitPrice] 
-, [RecommendedRetailPrice] 
-, [TypicalWeightPerUnit] 
-, [MarketingComments] 
-, [InternalComments] 
-, [Photo] 
-, [CustomFields] 
-, [Tags]
-, [SearchDetails] 
-, 2 as [LastEditedBy] 
-, getdate() as [ValidFrom] 
-, (select max(ValidTo) from Warehouse.stockitems) as [ValidTo] 
+select *
+into #t1
 from openxml(@dochandle, N'StockItems/Item/Package')
-with ( [StockItemID] int
-, [StockItemName] nvarchar(100) '../@Name'
+with ([StockItemName] nvarchar(100) '../@Name'
 , [SupplierID] int '../SupplierID'
-, [ColorID] int
 , [UnitPackageID] int '../Package/UnitPackageID'
 , [OuterPackageID] int '../Package/OuterPackageID'
-, [Brand] nvarchar(50)
-, [Size] nvarchar(20)
 , [LeadTimeDays] int '../LeadTimeDays'
 , [QuantityPerOuter] int '../Package/QuantityPerOuter'
 , [IsChillerStock] bit '../IsChillerStock'
-, [Barcode] nvarchar(50)
 , [TaxRate] decimal(18,3) '../TaxRate'
 , [UnitPrice] decimal(18,2) '../UnitPrice'
-, [RecommendedRetailPrice] decimal(18,2)
 , [TypicalWeightPerUnit] decimal(18,3) '../Package/TypicalWeightPerUnit'
-, [MarketingComments] nvarchar(max)
-, [InternalComments] nvarchar(max)
-, [Photo] varbinary(max)
-, [CustomFields] nvarchar(max)
-, [Tags] nvarchar(max)
 , [SearchDetails] nvarchar(max) '../@Name'
-, [LastEditedBy] int 
-, [ValidFrom] datetime2(7)
-, [ValidTo] datetime2(7) 
 )
 
 exec sp_xml_removedocument @dochandle ---Почему не обнуляется dochandle?
 
-drop table if exists warehouse.stockitems_upload0
-select *
-into warehouse.stockitems_upload0
-from warehouse.stockitems
 
-create clustered index stockitems0 on warehouse.stockitems_upload0 (StockItemID)
-
-MERGE warehouse.stockitems_upload0 AS Target
-USING warehouse.stockitems_upload AS Source
-    ON (Target.StockItemID = Source.StockItemID)
+MERGE warehouse.stockitems AS Target
+USING #t1 as Source
+    ON (Source.StockItemName = Target.StockItemName)
 WHEN NOT MATCHED 
-    THEN INSERT 
-        VALUES (Source.StockItemID
-		, Source.StockItemName
+    THEN INSERT (StockItemName
+		, SupplierID
+		, ColorID
+		, UnitPackageID
+		, OuterPackageID
+		, LeadTimeDays
+		, QuantityPerOuter
+		, IsChillerStock
+		, TaxRate
+		, UnitPrice
+		, TypicalWeightPerUnit
+		, LastEditedBy
+	)
+        VALUES (Source.StockItemName
 		, Source.SupplierID
-		, Source.ColorID
+		, 3
 		, Source.UnitPackageID
 		, Source.OuterPackageID
-		, Source.Brand
-		, Source.Size
 		, Source.LeadTimeDays
 		, Source.QuantityPerOuter
 		, Source.IsChillerStock
-		, Source.Barcode
 		, Source.TaxRate
 		, Source.UnitPrice
-		, Source.RecommendedRetailPrice
 		, Source.TypicalWeightPerUnit
-		, Source.MarketingComments
-		, Source.InternalComments
-		, Source.Photo
-		, Source.CustomFields
-		, Source.Tags
-		, Source.SearchDetails
-		, Source.LastEditedBy
-		, Source.ValidFrom
-		, Source.ValidTo)
+		, 1)
 WHEN MATCHED
 THEN UPDATE
 SET StockItemName=Target.StockItemName
+, SupplierID=Target.SupplierID
+, UnitPackageID=Target.UnitPackageID
+, OuterPackageID=Target.OuterPackageID
+, LeadTimeDays=Target.LeadTimeDays
+, QuantityPerOuter=Target.QuantityPerOuter
+, IsChillerStock=Target.IsChillerStock
+, TaxRate=Target.TaxRate
+, UnitPrice=Target.UnitPrice
+, TypicalWeightPerUnit=Target.TypicalWeightPerUnit
 OUTPUT deleted.*, $action, inserted.*;
 
-
-select * from warehouse.stockitems_upload
-select * from warehouse.stockitems_upload0
-
----Если попытаться вставить данные в оригинальную таблицу warehouse.stockitems, то выдает ошибку
-
-select *
-from sys.sequences
-
-declare @StockItemID int
-
-set @StockItemID = next value for sequences.StockItemID
-
-MERGE warehouse.stockitems AS Target
-USING warehouse.stockitems_upload AS Source
-    ON (Target.StockItemID = Source.StockItemID)
-WHEN NOT MATCHED 
-    THEN INSERT 
-        VALUES (@StockItemID
-		, Source.StockItemName
-		, Source.SupplierID
-		, Source.ColorID
-		, Source.UnitPackageID
-		, Source.OuterPackageID
-		, Source.Brand
-		, Source.Size
-		, Source.LeadTimeDays
-		, Source.QuantityPerOuter
-		, Source.IsChillerStock
-		, Source.Barcode
-		, Source.TaxRate
-		, Source.UnitPrice
-		, Source.RecommendedRetailPrice
-		, Source.TypicalWeightPerUnit
-		, Source.MarketingComments
-		, Source.InternalComments
-		, Source.Photo
-		, Source.CustomFields
-		, Source.Tags
-		, Source.SearchDetails
-		, Source.LastEditedBy)
-WHEN MATCHED
-THEN UPDATE
-SET StockItemName=Target.StockItemName;
---OUTPUT deleted.*, $action, inserted.*;
 
 ---xQuery
 
@@ -319,7 +209,8 @@ select StockItemName as [@Name]
 , IsChillerStock as [IsChillerStock]
 , TaxRate as [TaxRate]
 , UnitPrice as [UnitPrice]
-from warehouse.stockitems_upload
+from warehouse.stockitems
+where ValidFrom like '2024-01-21%'
 for xml path('Item'), root('StockItems')
 
 
