@@ -20,6 +20,7 @@ LOG ON
 , size = 100MB
 , maxsize = 50GB
 , filegrowth = 100MB)
+collate Cyrillic_General_CI_AS
 go
 
 ---2. Создаем таблицы и схемы
@@ -29,35 +30,35 @@ use MSE_dashboards;
 --drop schema MarketData
 --drop schema sec
 
-create schema marketdata;
-create schema sec;
+create schema Marketdata;
+create schema Sec;
 
 ----------------------------------------------------------
 --drop table MSE_dashboards.sec.BoardsList
 
 create table MSE_dashboards.sec.BoardsList
-(BOARDID nvarchar(12) primary key
-, BOARDNAME NVARCHAR(381) );
+(BOARDID nvarchar(12) collate Cyrillic_General_CI_AS primary key
+, BOARDNAME NVARCHAR(381) collate Cyrillic_General_CI_AS );
 
 --drop table MSE_dashboards.sec.SecuritiesList
 
 create table MSE_dashboards.sec.SecuritiesList
-(SECID nvarchar(36) not null primary key
-, BOARDID nvarchar(12) not null foreign key references mse_dashboards.sec.BoardsList
-, SHORTNAME nvarchar(75) not null, SECNAME nvarchar(225) not null
+(SECID nvarchar(36) collate Cyrillic_General_CI_AS not null primary key
+, BOARDID nvarchar(12) collate Cyrillic_General_CI_AS not null foreign key references mse_dashboards.sec.BoardsList
+, SHORTNAME nvarchar(75) collate Cyrillic_General_CI_AS not null , SECNAME nvarchar(225) collate Cyrillic_General_CI_AS not null
 , DECIMALS int, MINSTEP numeric(10,5)
 , LASTTRADEDATE date, LASTDELDATE date
-, SECTYPE nvarchar(6), LATNAME nvarchar(90)
-, ASSETCODE nvarchar(75), LOT int
+, SECTYPE nvarchar(6) collate Cyrillic_General_CI_AS, LATNAME nvarchar(90) collate Cyrillic_General_CI_AS
+, ASSETCODE nvarchar(75) collate Cyrillic_General_CI_AS, LOT int
 , INITIALMARGIN numeric(10,2), HIGHLIMIT numeric(20,5)
 , LOWLIMIT numeric(20,5), STEPPRICE numeric(10,5)
 , BUYSELLFEE numeric(10,2), SCALPERFEE numeric(10,2)
 , NEGOTIATEDFEE numeric(10,2), EXERCISEFEE numeric(10,2)
-, FACEVALUE int, MARKETCODE nvarchar(12)
-, FACEUNIT nvarchar(12), CURRENCYID nvarchar(12)
-, LOTDIVIDER int, INSTRID nvarchar(12)
-, ISSUESIZE bigint, ISIN nvarchar(36)
-, REGNUMBER nvarchar(36), COUPONPERIOD int
+, FACEVALUE numeric(20,5), MARKETCODE nvarchar(12) collate Cyrillic_General_CI_AS
+, FACEUNIT nvarchar(12) collate Cyrillic_General_CI_AS, CURRENCYID nvarchar(12) collate Cyrillic_General_CI_AS
+, LOTDIVIDER int, INSTRID nvarchar(12) collate Cyrillic_General_CI_AS
+, ISSUESIZE bigint, ISIN nvarchar(36) collate Cyrillic_General_CI_AS
+, REGNUMBER nvarchar(36) collate Cyrillic_General_CI_AS, COUPONPERIOD int
 , ISSUESIZEPLACED bigint, LOTVALUE numeric(15,5) );
 
 -------------------------------------------------------------
@@ -65,7 +66,7 @@ create table MSE_dashboards.sec.SecuritiesList
 
 create table MSE_dashboards.MarketData.Futures
 (ID bigint primary key identity
-, SECID nvarchar(36) not null foreign key references MSE_dashboards.sec.SecuritiesList
+, SECID nvarchar(36)  not null foreign key references MSE_dashboards.sec.SecuritiesList
 , TRADEDATE date not null
 , [OPEN] numeric(20,5) not null
 , [LOW] numeric(20,5) not null
@@ -147,3 +148,4 @@ create nonclustered index secid_Futures on MSE_dashboards.MarketData.Futures (SE
 create nonclustered index secid_Currency on MSE_dashboards.MarketData.Currency (SECID)
 create nonclustered index secid_Stocks on MSE_dashboards.MarketData.Stocks (SECID)
 create nonclustered index secid_GovBonds on MSE_dashboards.MarketData.GovBonds (SECID)
+
