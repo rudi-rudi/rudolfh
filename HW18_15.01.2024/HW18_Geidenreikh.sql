@@ -148,4 +148,21 @@ select * from sales.fSumByCustomerID(@CustomerID)
 
 напишите здесь свое решение
 
+--выводим всех клиентов с датами последнего заказа
+
+drop function if exists sales.fGetCustomerOrderDate
+go
+create function sales.fGetCustomerOrderDate(@CustomerID int)
+returns table as return (
+select o.CustomerID, max(o.OrderDate) as maxdate
+from sales.orders o
+where o.CustomerID=@CustomerID
+group by CustomerID)
+
+select c.CustomerID, d.maxdate
+from sales.customers c
+cross apply (select *
+from sales.fGetCustomerOrderDate(c.CustomerID) f)
+as d
+order by c.CustomerID
 
