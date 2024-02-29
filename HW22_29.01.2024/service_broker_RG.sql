@@ -1,3 +1,13 @@
+/**
+drop service [//WideWorldImporters/Target]
+drop service [//WideWorldImporters/Initiator]
+drop queue WWITargetQueue
+drop queue WWIInitiatorQueue
+drop contract [//WideWorldImporters/Contract]
+drop message type [//WideWorldImporters/RequestMessage]
+drop message type [//WideWorldImporters/ReplyMessage]
+**/
+
 ---1. —оздаем сервис, процедуру и сообщение на отправку
 
 use WideWorldImporters
@@ -14,7 +24,7 @@ on database::WideWorldImporters to [sa]
 
 --создаем сообщение, в котором будет запрос информации по за€вке на формирование отчета дл€ клиента по таблице Sales.Invoices
 
-create message type [//WideWorldImporters/RequestReportMessage]
+create message type [//WideWorldImporters/RequestMessage]
 validation = well_formed_xml;
 
 --создаем ответное сообщение, в котором будет прописано, что за€вка сформирована
@@ -25,43 +35,68 @@ validation = well_formed_xml;
 --создаем контракт и 
 
 create contract [//WideWorldImporters/Contract]
-([//WideWorldImporters/RequestReportMessage] sent by initiator,
+([//WideWorldImporters/RequestMessage] sent by initiator,
 [//WideWorldImporters/ReplyMessage] sent by target);
-
---создаем очередь дл€ хранени€ исход€щих сообщений
-
-create queue WWIInitiatorQueue;
-
---создаем адресата в очередь
-
-create service [//WideWorldImporters/Initiator]
-on queue WWIInitiatorQueue;
 
 --создаем очередь дл€ хранени€ вход€щих сообщений
 
-create queue WWITargetQueue;
+create queue WWITargetQueue
+with
+status = on
+, retention = on
+--, procedure_name = sales.getreportprocedure
+, poison_message_handling (status = on);
 
 --создаем получател€ в очередь
 
 create service [//WideWorldImporters/Target]
 on queue WWITargetQueue;
 
+--создаем очередь дл€ хранени€ исход€щих сообщений
+
+create queue WWIInitiatorQueue
+with
+status = on
+, retention = on
+--, procedure_name = sales.RequestReportProcedure
+, poison_message_handling (status = on);
+
+--создаем адресата в очередь
+
+create service [//WideWorldImporters/Initiator]
+on queue WWIInitiatorQueue;
+
+
 --создаем процедуру дл€ формировани€ сообщени€ от инициатора и диалога
 
-create procedure RequestReportProcedure @StartDate date, @EndDate date
+create procedure sales.RequestReportProcedure @StartDate date, @EndDate date-- @InvoiceID int
 as
-set nocount on
-
+set nocount on;
 begin
 
-begin tran
 
 declare @InitDlgHandle uniqueidentifier;
-declare @RequestMessage nvarchar(max)
+declare @RequestMessage nvarchar(max);
 
+begin transaction;
 
+--—оздаем диалог дл€ передачи сообщений
 
---—оздаем сообщение от инициатора
+begin dialog @InitDlgHandle
+from service [//WideWorldImporters/Initiator]
+to service N'//WideWorldImporters/Target'
+on contract [//WideWorldImporters/Contract]
+with encryption=off;
+
+--ќтправл€ем сообщение от инициатора
+/**
+select @RequestMessage =
+(select InvoiceID 
+from Sales.Invoices
+where InvoiceID = @InvoiceID
+for xml auto, root('RequestMessage')
+);**/
+
 select @RequestMessage =
 
 (select a.InvoiceID
@@ -73,32 +108,24 @@ from Sales.Invoices a
 left join (select InvoiceID, SUM(ExtendedPrice) as Order_ExtendedPrice from Sales.InvoiceLines group by InvoiceID ) b on a.InvoiceID=b.InvoiceID
 where InvoiceDate between @StartDate and @EndDate
 for xml auto, root ('RequestMessage')
-)
-
---—оздаем диалог дл€ передачи сообщений
-
-begin dialog @InitDlgHandle
-from service [//WideWorldImporters/Initiator]
-to service N'//WideWorldImporters/Target'
-on contract [//WideWorldImporters/Contract]
-with encryption=off;
+);
 
 --ќтправл€ем сообщение от инициатора
 send on conversation @InitDlgHandle
-message type [//WideWorldImporters/RequestReportMessage] (@RequestMessage);
+message type [//WideWorldImporters/RequestMessage] (@RequestMessage);
 
 --¬изуализаци€ сообщени€
 SELECT @RequestMessage AS SentRequestMessage;
 
-commit tran 
+commit transaction;
 end;
-go
+
 
 ---2. —оздаем процедуру, получаем сообщение и выдаем ответ
 use WideWorldImporters
 go
 
-create procedure getreportprocedure
+create procedure sales.getreportprocedure
 as
 begin
 
@@ -107,7 +134,7 @@ declare @ReceiveMessage nvarchar(max);
 declare @ReceiveMessageName sysname;
 declare @ReplyMessage nvarchar(max);
 
---begin tran;
+begin tran;
 
 waitfor
 ( receive top(1)
@@ -116,10 +143,9 @@ waitfor
 @ReceiveMessageName = message_type_name
 from WWITargetQueue ), timeout 1000;
 
-select @ReceiveMessage as ReceivedRequestMessage;
 select @ReceiveMessageName as ReceiveMessageName;
 
-if @ReceiveMessageName = N'//WideWorldImporters/RequestReportMessage'
+if @ReceiveMessageName = N'//WideWorldImporters/RequestMessage'
 begin
 
 select @ReplyMessage = N'<ReplyMessage>Message Received</ReplyMessage>';
@@ -136,14 +162,40 @@ commit tran;
 
 end;
 
+--3. ѕолучение подтверждени€ от таргета и закрытие диалога
+
+create procedure sales.ConfirmReport
+as
+begin
+
+declare @RecvReplyMsgHandle uniqueidentifier,
+			@RecvReplyMessage nvarchar(max) 
+
+begin tran;
+waitfor(receive top(1)
+			@RecvReplyMsgHandle=Conversation_Handle
+			,@RecvReplyMessage=Message_Body
+		from WWIInitiatorQueue), timeout 1000;
+
+end conversation @RecvReplyMsgHandle;
+
+--отразить текст	
+select @RecvReplyMessage as ReceivedRepliedMessage; 
+
+commit tran;
+
+end;
+
 ---3. “естируем, что получилось
 
 
-exec RequestReportProcedure '2013-01-08', '2013-01-09'
-exec getreportprocedure
+exec sales.RequestReportProcedure '2013-01-09', '2013-01-09'
+exec sales.getreportprocedure
+exec sales.ConfirmReport
 
 select CAST(message_body AS XML), * from WWIInitiatorQueue
-select CAST(message_body AS XML) from WWITargetQueue
+select CAST(message_body AS XML), * from WWITargetQueue
 
 select * from sys.service_queues
 select * from sys.service_message_types
+select * from sys.service_contract_message_usages
