@@ -32,7 +32,7 @@ validation = well_formed_xml;
 create message type [//WideWorldImporters/ReplyMessage]
 validation = well_formed_xml;
 
---создаем контракт и 
+--создаем контракт
 
 create contract [//WideWorldImporters/Contract]
 ([//WideWorldImporters/RequestMessage] sent by initiator,
@@ -50,7 +50,7 @@ status = on
 --создаем получателя в очередь
 
 create service [//WideWorldImporters/Target]
-on queue WWITargetQueue;
+on queue WWITargetQueue ([//WideWorldImporters/Contract]);
 
 --создаем очередь для хранения исходящих сообщений
 
@@ -64,7 +64,7 @@ status = on
 --создаем адресата в очередь
 
 create service [//WideWorldImporters/Initiator]
-on queue WWIInitiatorQueue;
+on queue WWIInitiatorQueue ([//WideWorldImporters/Contract]);
 
 
 --создаем процедуру для формирования сообщения от инициатора и диалога
