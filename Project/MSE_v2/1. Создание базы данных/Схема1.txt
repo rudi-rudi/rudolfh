@@ -1,0 +1,113 @@
+SecuritiesList
+-
+SECID nvarchar(36) pk
+BOARDID nvarchar(12) fk >- BoardsList.BOARDID
+SHORTNAME nvarchar(75)
+SECNAME nvarchar(225)
+DECIMALS int
+MINSTEP numeric(10,5)
+LASTTRADEDATE date
+LASTDELDATE date
+SECTYPE nvarchar(6)
+LATNAME nvarchar(90)
+ASSETCODE nvarchar(75)
+LOT int
+INITIALMARGIN numeric(10,2)
+HIGHLIMIT numeric(20,5)
+LOWLIMIT numeric(20,5)
+STEPPRICE numeric(10,5)
+BUYSELLFEE numeric(10,2)
+SCALPERFEE numeric(10,2)
+NEGOTIATEDFEE numeric(10,2)
+EXERCISEFEE numeric(10,2)
+FACEVALUE int
+MARKETCODE nvarchar(12)
+FACEUNIT nvarchar(12)
+CURRENCYID nvarchar(12)
+LOTDIVIDER int
+INSTRID nvarchar(12)
+ISSUESIZE bigint
+ISIN nvarchar(36)
+REGNUMBER nvarchar(90)
+COUPONPERIOD int
+ISSUESIZEPLACED bigint
+LOTVALUE numeric(15,5)
+
+BoardsList
+-
+BOARDID nvarchar(12)
+BOARDNAME nvarchar(381)
+
+
+CurrencyMarketdata
+-
+ID bigint identity pk
+SECID nvarchar(36) fk >- SecuritiesList.SECID
+TRADEDATE date
+OPEN numeric(20,5)
+LOW numeric(20,5)
+HIGH numeric(20,5)
+CLOSE numeric(20,5)
+NUMTRADES int
+VOLRUR numeric(50,5)
+WARPRICE numeric(20,5)
+
+
+FuturesMarketdata
+-
+ID bigint identity pk
+SECID nvarchar(36)  fk >- SecuritiesList.SECID
+TRADEDATE date
+OPEN numeric(20,5)
+LOW numeric(20,5)
+HIGH numeric(20,5)
+CLOSE numeric(20,5)
+OPENPOSITIONVALUE numeric(38,5)
+VALUE numeric(38,5)
+VOLUME int
+OPENPOSITION int
+SETTLEPRICE numeric(20,5)
+
+SharesMarketdata
+-
+ID bigint identity pk
+SECID nvarchar(36) fk >- SecuritiesList.SECID
+TRADEDATE date
+NUMTRADES int
+VALUE numeric(50,5)
+OPEN numeric(20,5)
+LOW numeric(20,5)
+HIGH numeric(20,5)
+LEGALCLOSEPRICE numeric(20,5)
+WAPRICE numeric(20,5)
+CLOSE numeric(20,5)
+VOLUME int
+MP2VALTRD numeric(38,5)
+MARKETPRICE3TRADESVALUE numeric(38,5)
+CURRENCYID nvarchar(9)
+
+BondsMarketdata
+-
+ID bigint pk
+SECID nvarchar(36)  fk >- SecuritiesList.SECID
+TRADEDATE date
+NUMTRADES int
+VALUE numeric(38,5)
+LOW numeric(20,5)
+HIGH numeric(20,5)
+CLOSE numeric(20,5)
+LEGALCLOSEPRICE numeric(20,5)
+ACCINT numeric(20,5)
+WAPRICE numeric(20,5)
+OPEN numeric(20,5)
+VOLUME int
+MARKETPRICE2 numeric(20,5)
+MARKETPRICE3 numeric(20,5)
+MP2VALTRD numeric(38,5)
+MARKETPRICE3TRADESVALUE numeric(50,5)
+MATDATE date
+COUPONPERCENT decimal(5,2)
+COUPONVALUE numeric(10,2)
+FACEVALUE numeric(20,5)
+CURRENCYID nvarchar(9)
+FACEUNIT nvarchar(9)

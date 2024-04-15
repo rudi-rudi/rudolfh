@@ -1,0 +1,13 @@
+Параметры финансовых инструментов для реестра:
+
+https://iss.moex.com/iss/engines/futures/markets/forts/boards/rfud/securities.json?iss.json=extended - фьючерсы
+https://iss.moex.com/iss/engines/currency/markets/selt/boards/cets/securities.json?iss.json=extended - валюта
+https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.json?iss.json=extended - акции
+https://iss.moex.com/iss/engines/stock/markets/bonds/boards/TQOB/securities.json?iss.json=extended - ОФЗ
+
+Исторические котировки финансовых инструментов (макс выгрузка 100 записей по 1 дате):
+
+https://iss.moex.com/iss/history/engines/futures/markets/forts/boards/rfud/securities.json?iss.json=extended&is_trading=1&date=2024-01-19&start=0&limit=100 - фьючерсы (по 100 штук нужно смещение start)
+https://iss.moex.com/iss/history/engines/currency/markets/selt/boards/cets/securities.json?iss.json=extended&is_trading=1&date=2024-01-19&start=0&limit=100 - валюта (по 100 штук нужно смещение start)
+https://iss.moex.com/iss/history/engines/stock/markets/shares/boards/TQBR/securities.json?iss.json=extended&is_trading=1&date=2024-01-19&start=0&limit=100 - акции (по 100 штук нужно смещение start)
+https://iss.moex.com/iss/history/engines/stock/markets/bonds/boards/TQOB/securities.json?iss.json=extended&is_trading=1&date=2024-01-19&start=0&limit=100 - облигации (по 100 штук нужно смещение start)
